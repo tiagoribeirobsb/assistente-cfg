@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurador de Assistente Virtual</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-left: 5px solid;
+        }
+        
+        .section.identidade { border-left-color: #007bff; }
+        .section.negocio { border-left-color: #28a745; }
+        .section.comportamento { border-left-color: #fd7e14; }
+        .section.mensagens { border-left-color: #6f42c1; }
+        .section.operacao { border-left-color: #dc3545; }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section h2::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        
+        .identidade h2::before { background: #007bff; }
+        .negocio h2::before { background: #28a745; }
+        .comportamento h2::before { background: #fd7e14; }
+        .mensagens h2::before { background: #6f42c1; }
+        .operacao h2::before { background: #dc3545; }
+        
+        .form-group {
+            margin-bottom: 30px;
+        }
+        
+        .question-title {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .question-subtitle {
+            display: block;
+            margin-bottom: 12px;
+            color: #666;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        
+        select {
+            cursor: pointer;
+        }
+        
+        .progress {
+            background: #e0e0e0;
+            height: 6px;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 18px 50px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 40px auto 0;
+            min-width: 250px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+        }
+        
+        .success-message {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .error-message {
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .output {
+            margin-top: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .required-mark {
+            color: #dc3545;
+            margin-left: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Assistente Virtual</h1>
+        <p class="subtitle">Configure sua assistente para WhatsApp de forma profissional</p>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <form id="configForm">
+            <!-- IDENTIDADE -->
+            <div class="section identidade">
+                <h2>👤 Identidade & Contato</h2>
+                
+                <div class="form-group">
+                    <label class="question-title">Qual será o nome da sua assistente virtual?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Escolha um nome fácil de lembrar e pronunciar</span>
+                    <input type="text" name="assistantName" placeholder="Ex: Laura, Sofia, Maya, Ana" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Qual é o seu nome completo?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Você terá acesso administrativo total à assistente</span>
+                    <input type="text" name="ownerName" placeholder="Ex: Maria Silva Santos" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Qual é o nome da sua empresa?<span class="required-mark">*</span></label>
+                    <input type="text" name="companyName" placeholder="Ex: Clínica Saúde Total, João Silva Advogados" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Deseja nosso serviço de número fixo exclusivo para WhatsApp?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Com número fixo, sua assistente terá um WhatsApp próprio e profissional</span>
+                    <select name="useFixedNumber" required>
+                        <option value="">Selecione uma opção...</option>
+                        <option value="sim">SIM - Quero um número fixo exclusivo (R$ 89/mês)</option>
+                        <option value="nao">NÃO - Vou usar meu número pessoal</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- NEGÓCIO -->
+            <div class="section negocio">
+                <h2>🏢 Negócio</h2>
+                
+                <div class="form-group">
+                    <label class="question-title">Qual é o seu ramo de atividade?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Isso ajudará a personalizar as respostas da assistente</span>
+                    <select name="businessType" required>
+                        <option value="">Selecione seu ramo...</option>
+                        <option value="saude">Saúde (Médico, Dentista, Psicólogo)</option>
+                        <option value="advocacia">Advocacia</option>
+                        <option value="consultoria">Consultoria</option>
+                        <option value="educacao">Educação e Cursos</option>
+                        <option value="beleza">Beleza e Estética</option>
+                        <option value="tecnologia">Tecnologia</option>
+                        <option value="marketing">Marketing/Agência</option>
+                        <option value="ecommerce">E-commerce</option>
+                        <option value="servicos">Prestação de Serviços</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">O que sua empresa faz?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Descreva seus serviços, público-alvo, diferenciais e tempo de mercado</span>
+                    <textarea name="businessDescription" placeholder="Exemplo: Sou dentista especializada em ortodontia há 10 anos. Atendo crianças e adultos, com foco em tratamentos modernos usando tecnologia 3D..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Qual é o seu horário de funcionamento?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Informe os dias e horários de atendimento</span>
+                    <input type="text" name="businessHours" placeholder="Ex: Segunda a Sexta, 9h às 18h | Sábados 9h às 13h" required>
+                </div>
+            </div>
+            
+            <!-- COMPORTAMENTO -->
+            <div class="section comportamento">
+                <h2>🎭 Comportamento</h2>
+                
+                <div class="form-group">
+                    <label class="question-title">Como a assistente deve se comunicar?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Escolha o tom de voz que melhor representa sua marca</span>
+                    <select name="voiceTone" required>
+                        <option value="">Selecione o tom...</option>
+                        <option value="profissional">Profissional e Formal (ideal para advocacia, consultoria)</option>
+                        <option value="amigavel">Amigável e Casual (ideal para comércio, serviços gerais)</option>
+                        <option value="tecnico">Técnico e Preciso (ideal para área da saúde, engenharia)</option>
+                        <option value="empatico">Empático e Acolhedor (ideal para psicologia, coaching)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Sobre o que a assistente PODE conversar?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Liste os assuntos que ela está autorizada a discutir com clientes</span>
+                    <textarea name="allowedTopics" placeholder="Ex: Serviços oferecidos, horários disponíveis, localização do escritório, formas de pagamento, processo de trabalho..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Como a assistente deve responder sobre VALORES/PREÇOS?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Defina a estratégia para abordar questões financeiras</span>
+                    <select name="priceStrategy" required>
+                        <option value="">Selecione a estratégia...</option>
+                        <option value="direto">Informar valores diretamente</option>
+                        <option value="faixa">Informar faixa de preços</option>
+                        <option value="qualificar">Qualificar o cliente antes de informar</option>
+                        <option value="agendar">Agendar reunião para orçamento</option>
+                        <option value="formulario">Enviar formulário de orçamento</option>
+                        <option value="nao_informar">Não informar valores por WhatsApp</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Quais são seus valores e condições de pagamento?</label>
+                    <span class="question-subtitle">Detalhe preços, formas de pagamento, descontos se aplicável</span>
+                    <textarea name="priceDetails" placeholder="Ex: Consulta inicial: R$ 200, Retorno: R$ 150, PIX (5% desconto), Cartão até 3x sem juros..."></textarea>
+                </div>
+            </div>
+            
+            <!-- MENSAGENS PADRÃO -->
+            <div class="section mensagens">
+                <h2>💬 Mensagens Padrão</h2>
+                
+                <div class="form-group">
+                    <label class="question-title">Como a assistente deve se apresentar?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Primeira mensagem que o cliente receberá</span>
+                    <textarea name="welcomeMessage" placeholder="Ex: Olá! Eu sou a Laura, assistente virtual da Dra. Maria Silva. Estou aqui para ajudar com agendamentos e tirar suas dúvidas..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">O que responder FORA DO HORÁRIO?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Mensagem automática fora do expediente</span>
+                    <textarea name="offlineMessage" placeholder="Ex: Nosso horário de atendimento é de segunda a sexta, das 8h às 18h. Sua mensagem foi registrada..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">O que fazer quando NÃO SOUBER responder?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Script para quando a assistente não tiver a informação</span>
+                    <textarea name="unknownResponse" placeholder="Ex: Essa é uma excelente pergunta! Vou verificar essa informação e retorno em breve..." required></textarea>
+                </div>
+            </div>
+            
+            <!-- OPERAÇÃO -->
+            <div class="section operacao">
+                <h2>⚙️ Operação</h2>
+                
+                <div class="form-group">
+                    <label class="question-title">Quais são as perguntas mais frequentes dos seus clientes?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Liste as perguntas e respostas que seus clientes sempre fazem</span>
+                    <textarea name="faq" placeholder="Ex: P: Vocês atendem convênio? R: Sim, atendemos Unimed e SulAmérica. P: Precisa agendar? R: Sim, apenas com hora marcada..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="question-title">Quando a assistente deve chamar um humano?<span class="required-mark">*</span></label>
+                    <span class="question-subtitle">Situações que exigem atendimento pessoal</span>
+                    <textarea name="transferRules" placeholder="Ex: Cliente insistir em falar com pessoa, emergências médicas, reclamações graves, negociação de valores..." required></textarea>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">📧 Enviar Respostas</button>
+            
+            <div class="loading" id="loading">
+                <p>📤 Enviando suas respostas...</p>
+                <div style="margin: 10px 0;">⏳ Aguarde um momento</div>
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                <h3>✅ Respostas Enviadas com Sucesso!</h3>
+                <p>Suas informações foram enviadas. Em breve entraremos em contato para configurar sua assistente virtual!</p>
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                <h3>❌ Erro no Envio</h3>
+                <p>Ocorreu um problema ao enviar suas respostas. Tente novamente ou entre em contato conosco.</p>
+            </div>
+        </form>
+        
+        <div class="output" id="output" style="display: none;">
+            <h3>📋 Resumo das Respostas</h3>
+            <p style="margin-bottom: 15px; color: #666;">Confira suas respostas antes de enviar:</p>
+            <textarea id="configResult" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar EmailJS
+        (function(){
+            emailjs.init("JNnh7Ch-0BcfSFW7o"); // Public Key
+        })();
+        
+        const form = document.getElementById('configForm');
+        const progressBar = document.getElementById('progressBar');
+        const output = document.getElementById('output');
+        const configResult = document.getElementById('configResult');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Mapeamento dos valores para texto legível
+        const mappings = {
+            useFixedNumber: {
+                'sim': 'SIM - Número fixo exclusivo (R$ 89/mês)',
+                'nao': 'NÃO - Usar número pessoal'
+            },
+            businessType: {
+                'saude': 'Saúde (Médico, Dentista, Psicólogo)',
+                'advocacia': 'Advocacia',
+                'consultoria': 'Consultoria',
+                'educacao': 'Educação e Cursos',
+                'beleza': 'Beleza e Estética',
+                'tecnologia': 'Tecnologia',
+                'marketing': 'Marketing/Agência',
+                'ecommerce': 'E-commerce',
+                'servicos': 'Prestação de Serviços',
+                'outro': 'Outro'
+            },
+            voiceTone: {
+                'profissional': 'Profissional e Formal',
+                'amigavel': 'Amigável e Casual',
+                'tecnico': 'Técnico e Preciso',
+                'empatico': 'Empático e Acolhedor'
+            },
+            priceStrategy: {
+                'direto': 'Informar valores diretamente',
+                'faixa': 'Informar faixa de preços',
+                'qualificar': 'Qualificar o cliente antes de informar',
+                'agendar': 'Agendar reunião para orçamento',
+                'formulario': 'Enviar formulário de orçamento',
+                'nao_informar': 'Não informar valores por WhatsApp'
+            }
+        };
+        
+        // Atualizar barra de progresso
+        function updateProgress() {
+            const requiredInputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            const filled = Array.from(requiredInputs).filter(input => input.value.trim() !== '').length;
+            const percentage = (filled / requiredInputs.length) * 100;
+            progressBar.style.width = percentage + '%';
+        }
+        
+        // Adicionar listeners para todos os inputs
+        form.addEventListener('input', updateProgress);
+        form.addEventListener('change', updateProgress);
+        
+        // Submit form
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Mostrar loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Enviando...';
+            loading.style.display = 'block';
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            const formData = new FormData(form);
+            
+            // Organizar dados para preview
+            let emailBody = `CONFIGURAÇÃO DA ASSISTENTE VIRTUAL\n\n`;
+            emailBody += `Gerada em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
+            
+            // IDENTIDADE
+            emailBody += "=== IDENTIDADE & CONTATO ===\n\n";
+            emailBody += `Nome da Assistente: ${formData.get('assistantName')}\n`;
+            emailBody += `Responsável: ${formData.get('ownerName')}\n`;
+            emailBody += `Empresa: ${formData.get('companyName')}\n`;
+            emailBody += `Número Fixo: ${mappings.useFixedNumber[formData.get('useFixedNumber')]}\n\n`;
+            
+            // NEGÓCIO
+            emailBody += "=== NEGÓCIO ===\n\n";
+            emailBody += `Ramo: ${mappings.businessType[formData.get('businessType')]}\n\n`;
+            emailBody += `Descrição da Empresa:\n${formData.get('businessDescription')}\n\n`;
+            emailBody += `Horário: ${formData.get('businessHours')}\n\n`;
+            
+            // COMPORTAMENTO
+            emailBody += "=== COMPORTAMENTO ===\n\n";
+            emailBody += `Tom: ${mappings.voiceTone[formData.get('voiceTone')]}\n\n`;
+            emailBody += `Assuntos Permitidos:\n${formData.get('allowedTopics')}\n\n`;
+            emailBody += `Estratégia de Preços: ${mappings.priceStrategy[formData.get('priceStrategy')]}\n\n`;
+            
+            if (formData.get('priceDetails')) {
+                emailBody += `Valores e Condições:\n${formData.get('priceDetails')}\n\n`;
+            }
+            
+            // MENSAGENS PADRÃO
+            emailBody += "=== MENSAGENS PADRÃO ===\n\n";
+            emailBody += `Apresentação:\n"${formData.get('welcomeMessage')}"\n\n`;
+            emailBody += `Fora do Horário:\n"${formData.get('offlineMessage')}"\n\n`;
+            emailBody += `Não Sei Responder:\n"${formData.get('unknownResponse')}"\n\n`;
+            
+            // OPERAÇÃO
+            emailBody += "=== OPERAÇÃO ===\n\n";
+            emailBody += `Perguntas Frequentes:\n${formData.get('faq')}\n\n`;
+            emailBody += `Transferir para Humano:\n${formData.get('transferRules')}\n\n`;
+            
+            // Mostrar preview
+            configResult.value = emailBody;
+            output.style.display = 'block';
+            
+            // Preparar dados para EmailJS
+            const templateParams = {
+                company_name: formData.get('companyName'),
+                owner_name: formData.get('ownerName'),
+                assistant_name: formData.get('assistantName'),
+                message: emailBody,
+                from_email: formData.get('ownerName') + ' - ' + formData.get('companyName')
+            };
+            
+            // Enviar email via EmailJS
+            emailjs.send('service_1qkq7id', 'template_ou84icc', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    
+                    // Mostrar sucesso
+                    loading.style.display = 'none';
+                    successMessage.style.display = 'block';
+                    successMessage.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Reset form após sucesso
+                    setTimeout(() => {
+                        form.reset();
+                        updateProgress();
+                        output.style.display = 'none';
+                        successMessage.style.display = 'none';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '📧 Enviar Respostas';
+                    }, 5000);
+                    
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    
+                    // Mostrar erro
+                    loading.style.display = 'none';
+                    errorMessage.style.display = 'block';
+                    errorMessage.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Reabilitar botão
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '📧 Enviar Respostas';
+                });
+        });
+        
+        function copyConfig() {
+            // Função removida - agora só envia email
+        }
+        
+        // Inicializar progresso
+        updateProgress();
+    </script>
+</body>
+</html>
