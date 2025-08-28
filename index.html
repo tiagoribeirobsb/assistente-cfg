@@ -544,16 +544,15 @@
             configResult.value = emailBody;
             output.style.display = 'block';
             
-            // Preparar dados para EmailJS
+            // Preparar dados para EmailJS (usando suas variáveis exatas)
             const templateParams = {
-                company_name: formData.get('companyName'),
-                owner_name: formData.get('ownerName'),
-                assistant_name: formData.get('assistantName'),
+                from_name: formData.get('ownerName'),
+                from_email: "cliente@exemplo.com", // Email do cliente
                 message: emailBody,
-                from_email: formData.get('ownerName') + ' - ' + formData.get('companyName')
+                email: "labridgebr@gmail.com" // Seu email de destino
             };
             
-            // Enviar email via EmailJS
+            // Enviar email via EmailJS (usando o template Contact Us)
             emailjs.send('service_1qkq7id', 'template_ou84icc', templateParams)
                 .then(function(response) {
                     console.log('SUCCESS!', response.status, response.text);
